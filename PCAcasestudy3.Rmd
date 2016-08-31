@@ -1,0 +1,457 @@
+---
+title: "PCAcasestudy3"
+author: "Darren Thornbrugh"
+date: "August 31, 2016"
+output: html_document
+---
+
+```{r}
+## Article title: A practitioner’s guide for exploring water quality patterns using Principal Components Analysis and Procrustes
+## Journal name: Environmental Monitoring and Assessment
+## Author names: C. J. Sergeant, E. N. Starkey, K. K. Bartz, M. H. Wilson, F. J. Mueter
+## Corresponding author: C. J. Sergeant, National Park Service, christopher_sergeant@nps.gov
+
+## Case study C: annual water quality patterns in 21 lakes at two depths across two years
+## Code for PCA, Procrustes analysis, and color ramp biplot
+## Written by Krista Bartz/Chris Sergeant, Updated 15 September 2015
+## Color ramp biplots re-created from Lisi 2014 (Figure 3.2)
+
+## Clean up workspace. This function removes any data already loaded.
+
+rm(list=ls())
+
+##########################
+## Read-in data for PCA ##
+##########################
+
+# This case study runs a PCA on four separate data matrices that are included in a single file (7_CaseStudyC.xlsx)
+# From left to right, each matrix is: 2013 water quality data at 1 m depth, 2013 at 30 m, 2014 at 1 m, and 2014 at 30 m
+# Use the code below to read-in data that is actively copied in your excel spreadsheet (.xls or .csv files)
+# Working with each matrix from left to right, copy your data in the spreadsheet, and while the marquee is still active, run the code below
+# Note that 'header=T' allows the function to recognize header names, and 'row.names=1' allows the function
+# to recognize that the first column is the name for each data row
+
+# Select and copy the 2013 1 m data matrix (cells A7:E28) and run this code while the copy marquee is active:
+# IMPORTANT: do not highlight the bolded matrix headers (e.g., "2013 at 1 m depth") or the code will not work properly
+
+inputs.2013.1m = read.table(file = "clipboard", sep = "\t", header=T, row.names=1)
+
+# Do the same for 2013 30 m, 2014 1 m, and 2014 30 m
+
+inputs.2013.30m = read.table(file = "clipboard", sep = "\t", header=T, row.names=1)
+inputs.2014.1m = read.table(file = "clipboard", sep = "\t", header=T, row.names=1)
+inputs.2014.30m = read.table(file = "clipboard", sep = "\t", header=T, row.names=1)
+
+# Quickly review the content and dimensions of imported data for accuracy
+
+head(inputs.2013.1m); dim(inputs.2013.1m)
+head(inputs.2013.30m); dim(inputs.2013.30m)
+head(inputs.2014.1m); dim(inputs.2014.1m)
+head(inputs.2014.30m); dim(inputs.2014.30m)
+
+####################################
+## Perform PCAs and graph biplots ##
+####################################
+
+## PCA based on the CORRELATION matrix, instead of the VARIANCE-COVARIANCE matrix: 'cor=T' 
+## Since the core parameters are measured on different scales, this ensures the data are normalized to 0 mean, 1 SD
+## In the .xls file for Case Study C, the Site column has four-letter codes for each lake
+## Lake profiles were measured once per year per depth
+
+####################################
+#### PCA: Small Lakes, 2013, 1 m ###
+####################################
+
+pca.2013.1m = princomp(x = inputs.2013.1m, cor=T)
+
+# Summary information for PCA
+
+summary(pca.2013.1m)                     # How important is each principal component? (the cumulative proportion is most important here)
+print(loadings(pca.2013.1m), cutoff=0)   # Loadings tell you how influential each variable was in forming the ordination spread of points
+plot(pca.2013.1m)                        # This is known as a "scree plot"; it is the visual representation of the variance accounted for in each PC 
+
+# Create a table comparing observed eigenvalues to expected eignevalues (same approach as broken stick spreadsheet file, "2_BrokenStick.xlsx")
+
+obs.eig.2013.1m = pca.2013.1m$sdev^2     # Observed eigenvalues
+exp.eig.2013.1m = rev(cumsum(1/(4:1)))   # The expected eignvalues calculated here assume 4 components; 
+                                         # For other applications, replace 4 with appropriate number or use (for example): length(pca.results$sdev)
+cbind(obs.eig.2013.1m,exp.eig.2013.1m)   # Table output     
+
+# Create biplot
+
+biplot(pca.2013.1m)                      # This is the default biplot of PCA scores 
+
+# Slightly cleaned up version of default biplot (informative axis labels, and smaller font for each point)
+
+biplot(pca.2013.1m, main="Small lakes: 2013 at 1 m", xlab="PC1", ylab="PC2", cex=0.7)
+
+#####################################
+#### PCA: Small Lakes, 2013, 30 m ###
+#####################################
+
+pca.2013.30m = princomp(x = inputs.2013.30m, cor=T)
+
+summary(pca.2013.30m)                     
+print(loadings(pca.2013.30m), cutoff=0)   
+plot(pca.2013.30m)
+
+obs.eig.2013.30m = pca.2013.30m$sdev^2 
+exp.eig.2013.30m = rev(cumsum(1/(4:1)))
+cbind(obs.eig.2013.30m,exp.eig.2013.30m)
+                        
+biplot(pca.2013.30m)                       
+biplot(pca.2013.30m, main="Small lakes: 2013 at 30 m", xlab="PC1", ylab="PC2", cex=0.7)
+
+####################################
+#### PCA: Small Lakes, 2014, 1 m ###
+####################################
+
+pca.2014.1m = princomp(x = inputs.2014.1m, cor=T)
+
+summary(pca.2014.1m)                     
+print(loadings(pca.2014.1m), cutoff=0)   
+plot(pca.2014.1m)
+
+obs.eig.2014.1m = pca.2014.1m$sdev^2 
+exp.eig.2014.1m = rev(cumsum(1/(4:1)))
+cbind(obs.eig.2014.1m,exp.eig.2014.1m)
+                                             
+biplot(pca.2014.1m)                      
+biplot(pca.2014.1m, main="Small lakes: 2014 at 1 m", xlab="PC1", ylab="PC2", cex=0.7)
+
+#####################################
+#### PCA: Small Lakes, 2014, 30 m ###
+#####################################
+
+pca.2014.30m = princomp(x = inputs.2014.30m, cor=T)
+
+summary(pca.2014.30m)                     
+print(loadings(pca.2014.30m), cutoff=0)   
+plot(pca.2014.30m)   
+
+obs.eig.2014.30m = pca.2014.30m$sdev^2 
+exp.eig.2014.30m = rev(cumsum(1/(4:1)))
+cbind(obs.eig.2014.30m,exp.eig.2014.30m)
+                                            
+biplot(pca.2014.30m)                       
+biplot(pca.2014.30m, main="Small lakes: 2014 at 30 m", xlab="PC1", ylab="PC2", cex=0.7)
+
+###########################
+### Modified Scree plot ###
+###########################
+
+# See step (4) in Case Study C for more details regarding this test
+
+# set up placeholders
+var.comp.1 <- rep(NA, length=1000)
+var.comp.2 <- rep(NA, length=1000)
+var.comp.3 <- rep(NA, length=1000)
+var.comp.4 <- rep(NA, length=1000)
+
+# for loop
+for (i in 1:1000){
+  
+  # Generate random numbers to create a matrix with 4 columns x 21 rows
+  var1 <- rnorm(21, mean = 0, sd = 1)
+  var2 <- rnorm(21, mean = 0, sd = 1)
+  var3 <- rnorm(21, mean = 0, sd = 1)
+  var4 <- rnorm(21, mean = 0, sd = 1)
+  
+  # Use cbind to create the matrix
+  random.matrix <- cbind(var1, var2, var3, var4)
+  
+  # Run a PCA
+  pca.random <- princomp(x = random.matrix, cor=T)
+  
+  # Specify the output of interest
+  pca.random.var <- as.data.frame(100*(pca.random$sdev^2/sum(pca.random$sdev^2)))
+  var.comp.1[i] <- pca.random.var[1,1]
+  var.comp.2[i] <- pca.random.var[2,1]
+  var.comp.3[i] <- pca.random.var[3,1]
+  var.comp.4[i] <- pca.random.var[4,1]
+  
+}
+
+# create and save the output file (optional) -- TO MAKE THIS SAVE SOMEWHERE HELPFUL, YOU NEED TO SET THE WORKING DIRECTORY USING setwd()
+output <- cbind(var.comp.1, var.comp.2, var.comp.3, var.comp.4)
+write.csv(output, "PCA_Variance_for_Scree_Plot_1000x.csv", row.names = F)
+
+# or just take averages to create a vector for plotting
+av.var.comp.1 <- mean(var.comp.1)
+av.var.comp.2 <- mean(var.comp.2)
+av.var.comp.3 <- mean(var.comp.3)
+av.var.comp.4 <- mean(var.comp.4)
+
+# Plot random variance versus variance from the four lake data matrices
+comps = c(1,2,3,4)   # Create PC axis
+av.var.comp.all <- c(av.var.comp.1, av.var.comp.2, av.var.comp.3, av.var.comp.4)   # Create random eigenvalue axis 
+
+plot(comps, av.var.comp.all, type="l", xlim=c(1,4), ylim=c(0,100), 
+     ylab="Percentage of Variance", xlab="Principal Component", lwd=2, xaxp=c(1,4,3), las=1, col="black")        # Line plot with variance for random number PCs
+lines(100*(pca.2013.1m$sdev^2/sum(pca.2013.1m$sdev^2)), col="red2", lwd=2, lty=2)       # Add line with variance for 2013 lakes at 1 m
+lines(100*(pca.2013.30m$sdev^2/sum(pca.2013.30m$sdev^2)), col="green3", lwd=2, lty=3)   # Add line with variance for 2013 lakes at 30 m
+lines(100*(pca.2014.1m$sdev^2/sum(pca.2014.1m$sdev^2)), col="royalblue1", lwd=2, lty=4)      # Add line with variance for 2014 lakes at 1 m
+lines(100*(pca.2014.30m$sdev^2/sum(pca.2014.30m$sdev^2)), col="darkorange", lwd=2, lty=5)  # Add line with variance for 2014 lakes at 30 m
+legend(3.2,100,c("2013 - 1m","2013 - 30m","2014 - 1m","2014 - 30m","Random"),            # Add legend
+       lty=c(2,3,4,5,1), lwd=c(2,2,2,2,2), col=c("red2","green3","royalblue1","darkorange","black"),
+       y.intersp=1.25) 
+   
+##########################################################################################
+## Perform Procrustes analysis to compare two PCAs with the same data matrix structure  ##
+########################################################################################## 
+
+## The code below only uses the PC1 and PC2 scores from each PCA to run the 'protest' function;
+## depending on your results, you may want to use more PCs
+
+## This analysis requires the 'vegan' library:
+
+install.packages("vegan")   # only run this line if you don't have 'vegan' installed
+library(vegan)              # allow 'vegan' to be used for the following analyses
+
+######################################
+### 2013 at 1 m versus 2014 at 1 m ###
+######################################
+
+pca.2013.1m.scores = pca.2013.1m$scores[,1:2]                   # create a data frame of scores from 2013, 1 m PC1 and PC2
+pca.2014.1m.scores = pca.2014.1m$scores[,1:2]                   # create a data frame of scores from 2014, 1 m PC1 and PC2
+scores.pro = protest(pca.2013.1m.scores, pca.2014.1m.scores)    # assess the degree of similarity between the 2013 at 1 m and 2014 at 1 m data matrices
+
+## This output will give you the correlation between the two ordinations
+
+scores.pro
+
+## Two different ways to display the residuals between individual PCA scores from 2008 and 2011
+
+plot(scores.pro,kind=1, ylim=c(-0.3,0.3), xlim=c(-0.3,0.3))
+plot(scores.pro,kind=2)
+
+########################################
+### 2013 at 30 m versus 2014 at 30 m ###
+########################################
+
+pca.2013.30m.scores = pca.2013.30m$scores[,1:2]                  
+pca.2014.30m.scores = pca.2014.30m$scores[,1:2]                   
+scores.pro2 = protest(pca.2013.30m.scores, pca.2014.30m.scores)    
+
+scores.pro2
+
+plot(scores.pro2,kind=1, ylim=c(-0.3,0.3), xlim=c(-0.3,0.3))
+plot(scores.pro2,kind=2)
+
+########################################
+### 2013 at 1 m versus 2013 at 30 m ###
+########################################
+
+pca.2013.1m.scores = pca.2013.1m$scores[,1:2]                  
+pca.2013.30m.scores = pca.2013.30m$scores[,1:2]                   
+scores.pro3 = protest(pca.2013.1m.scores, pca.2013.30m.scores)    
+
+scores.pro3
+
+plot(scores.pro3,kind=1, ylim=c(-0.3,0.3), xlim=c(-0.3,0.3))
+plot(scores.pro3,kind=2)
+
+########################################
+### 2014 at 1 m versus 2014 at 30 m ####
+########################################
+
+pca.2014.1m.scores = pca.2014.1m$scores[,1:2]                  
+pca.2014.30m.scores = pca.2014.30m$scores[,1:2]                   
+scores.pro4 = protest(pca.2014.1m.scores, pca.2014.30m.scores)    
+
+scores.pro4
+
+plot(scores.pro4,kind=1, ylim=c(-0.3,0.3), xlim=c(-0.3,0.3))
+plot(scores.pro4,kind=2)
+
+############################################
+### Graph of ranked procrustes residuals ###
+############################################
+
+# First, create matrix of residual values for each Procrustes comparison:
+
+resid.13.1m.14.1m = as.matrix(sort(residuals(scores.pro)))
+resid.13.30m.14.30m = as.matrix(sort(residuals(scores.pro2)))
+resid.13.1m.13.30m = as.matrix(sort(residuals(scores.pro3)))
+resid.14.1m.14.30m = as.matrix(sort(residuals(scores.pro4)))
+
+# Then, create first plot:
+
+par(mar=c(3,3,2,2), las=1)
+plot(resid.13.1m.14.1m, ylim=c(0,0.3), ylab="",xaxt="n",bty="l")
+grid(NA,NULL,col="grey85", lty=3)
+mtext("Ranked observations",1, line=0.5)
+mtext("Procrustes residuals", side = 3, cex=0.8, font=2, adj=0.015, line=-0.5)
+
+# Add points to graph from other tests:
+
+points(resid.13.30m.14.30m, pch=19) 
+points(resid.13.1m.13.30m, pch=2) 
+points(resid.14.1m.14.30m, pch=8) 
+
+# Add a legend:
+
+legend(0.5, 0.30, c("2013 - 1 m vs. 2014 - 1 m","2013 - 30 m vs. 2014 - 30 m","2013 - 1 m vs. 2013 - 30 m","2014 - 1 m vs. 2014 - 30 m"), 
+   pch=c(1,19,2,8),bty="n", y.intersp=1.5)
+
+###################################
+### Creating color ramp biplots ###
+###################################
+
+## This analysis requires the 'vegan' and 'plotrix' libraries:
+
+install.packages("plotrix")   # only run this line if you don't have 'plotrix' installed
+library(plotrix)              # allow 'plotrix' to be used for the following analyses; 'vegan' should already be active from previous code above
+
+# Select and copy the environmental variables matrix (A6:G27 of '8_CaseStudyC_Env.xlsx') and run this code while the copy marquee is active:
+
+drivers = read.table(file = "clipboard", sep = "\t", header=T, row.names=1)
+
+# The lake water quality data matrices (2013 1 m, 2013 30 m, etc.) should already be read-in using code above
+
+# The PCA scores should already be read-in as part of the Procrustes analysis above
+
+# Create settings for a 2 x 2 panel graph:
+
+par(mfcol=c(2, 2), mar=c(0.75,0.75,0.75,0.75), oma=c(3,3,0,0), cex.axis=1, cex.lab=1) # c(bottom, left, top, right)
+
+######################################################################
+### Create the plot for 2013.1m using lake latitude as the driver ### 
+######################################################################
+
+# Plot PC1 and PC2 using plotrix. Red to blue gradient: c(1,0),c(0,0),c(0,1) 
+
+plot(pca.2013.1m.scores[,1], pca.2013.1m.scores[,2], pch=21, cex=2, xaxt='n', yaxt='n', 
+     xlim=c(-5.25,5.25), ylim=c(-5.25,5.25), bg=c(color.scale(drivers$Lake.lat,c(1,0),c(0,0),c(0,1)))) 
+
+# Adjust the labeling of the axes
+
+axis(1, at = c(-4, -2, 0, 2, 4), labels = c("", "", "", "", ""))
+axis(2, at = c(-4, -2, 0, 2, 4), labels = c("-4", "-2", "0", "2", "4"), las=2)
+
+# Add loadings (vector arrows) to the plot
+
+arrows(0,0,pca.2013.1m$loadings[,1]*4.5, pca.2013.1m$loadings[,2]*4.5, length=0.1, col="gray52", lwd = 1.5)
+
+# Add loading labels just outside the arrows       
+
+text(pca.2013.1m$loadings[,1]*5.5, pca.2013.1m$loadings[,2]*5.5, c("Temp","SC","DO","pH"), cex=0.8, col="gray52") 
+
+# Final touches on plot 
+
+testcol<-color.gradient(c(1,0),c(0,0),c(0,1),nslices=100)
+col.labels<-c("58.5047","61.1240")                                 # min, max of selected driver for 21 ws's
+
+# Create legend -- position of the lower left (x,y) and upper right (x,y) of the color bar
+
+color.legend(-3,-4.5,3,-4, col.labels, testcol, gradient="x", cex = 0.7)     # horizontal gradient
+text(0, -5, "Latitude (DD)", cex = 0.8)                                    
+text(-5.2,5, "2013 - 1 m", cex = 0.9, adj = 0)
+
+############################################################################
+### Create the plot for 2013.30m using watershed elevation as the driver ###
+############################################################################
+
+# Plot PC1 and PC2 using plotrix 
+
+plot(pca.2013.30m.scores[,1], pca.2013.30m.scores[,2], pch=21, cex=2, xaxt='n', yaxt='n', 
+     xlim=c(-5.25,5.25), ylim=c(-5.25,5.25), bg=c(color.scale(drivers$Elevation,c(1,0),c(0,0),c(0,1)))) 
+
+# Adjust the labeling of the axes
+
+axis(1, at = c(-4, -2, 0, 2, 4), labels = c("-4", "-2", "0", "2", "4"))
+axis(2, at = c(-4, -2, 0, 2, 4), labels = c("-4", "-2", "0", "2", "4"), las=2)
+
+# Add loadings to the plot
+
+arrows(0,0,pca.2013.30m$loadings[,1]*4.5, pca.2013.30m$loadings[,2]*4.5, length=0.1, col="gray52", lwd = 1.5)
+
+# Add loading labels just outside the arrows     
+
+text(pca.2013.30m$loadings[,1]*5.5, pca.2013.30m$loadings[,2]*5.5, c("Temp","SC","DO","pH"), cex=0.8, col="gray52") 
+
+# Final touches on plot
+
+testcol<-color.gradient(c(1,0),c(0,0),c(0,1),nslices=100)
+col.labels<-c(232,1385) # min, max of selected driver for 21 ws's
+
+# Create legend
+
+color.legend(-3,-4.5,3,-4, col.labels, testcol, gradient="x", cex = 0.7) 
+text(0, -5, "Elevation (m)", cex = 0.8)
+text(-5.2,5, "2013 - 30 m", cex = 0.9, adj = 0)
+
+########################################################################
+### Create the plot for 2014.1m using watershed slope as the driver ####
+########################################################################
+
+# Plot PC1 and PC2 using plotrix 
+
+plot(pca.2014.1m.scores[,1], pca.2014.1m.scores[,2], pch=21, cex=2, xaxt='n', yaxt='n',
+     xlim=c(-5.25,5.25), ylim=c(-5.25,5.25), bg=c(color.scale(drivers$Slope,c(1,0),c(0,0),c(0,1)))) 
+
+# Adjust the labeling of the axes
+
+axis(1, at = c(-4, -2, 0, 2, 4), labels = c("", "", "", "", ""))
+axis(2, at = c(-4, -2, 0, 2, 4), labels = c("", "", "", "", ""))
+
+# Add loadings to the plot
+
+arrows(0,0, pca.2014.1m$loadings[,1]*4.5, pca.2014.1m$loadings[,2]*4.5, length=0.1, col="gray52", lwd = 1.5)
+
+# Add loading labels just outside the arrows
+
+text(pca.2014.1m$loadings[,1]*5.5, pca.2014.1m$loadings[,2]*5.5, c("Temp","SC","DO","pH"), cex=0.8, col="gray52") 
+
+# Final touches on plot
+
+testcol<-color.gradient(c(1,0),c(0,0),c(0,1),nslices=100)
+col.labels<-c(4.8,27.1) # min, max of selected driver for 21 ws's
+
+# Create legend
+
+color.legend(-3,-4.5,3,-4, col.labels, testcol, gradient="x", cex = 0.7)
+text(0, -5, "Slope (°)", cex=0.8)
+text(-5.2,5, "2014 - 1 m", cex = 0.9, adj = 0)
+
+#######################################################################
+### Create the plot for 2014.30m using lake latitude as the driver ####
+#######################################################################
+
+# Plot PC1 and PC2 using plotrix 
+
+plot(pca.2014.30m.scores[,1], pca.2014.30m.scores[,2], pch=21, cex=2, xaxt='n', yaxt='n',
+     xlim=c(-5.25,5.25), ylim=c(-5.25,5.25), bg=c(color.scale(drivers$Lake.lat,c(1,0),c(0,0),c(0,1)))) 
+
+# Adjust the labeling of the axes
+
+axis(1, at = c(-4, -2, 0, 2, 4), labels = c("-4", "-2", "0", "2", "4"))
+axis(2, at = c(-4, -2, 0, 2, 4), labels = c("", "", "", "", ""))
+
+# Add loadings to the plot
+
+arrows(0,0,pca.2014.30m$loadings[,1]*4.5, pca.2014.30m$loadings[,2]*4.5, length=0.1, col="gray52", lwd = 1.5)
+
+# Add loading labels just outside the arrows      
+
+text(pca.2014.30m$loadings[,1]*5.5, pca.2014.30m$loadings[,2]*5.5, c("Temp","SC","DO","pH"), cex=0.8, col="gray52") 
+
+# Final touches on plot
+
+testcol<-color.gradient(c(1,0),c(0,0),c(0,1),nslices=100)
+col.labels<-c("58.5047","61.1240") # min, max of selected driver for 21 ws's
+
+# Create legend
+
+color.legend(-3,-4.5,3,-4, col.labels, testcol, gradient="x", cex = 0.7)
+text(0, -5, "Latitude (DD)", cex=0.8)
+text(-5.2,5, "2014 - 30 m", cex = 0.9, adj = 0)
+
+# add axis labels for all panels
+
+mtext("PC2", side=2, outer=T, line=1.75, at = 0.75, cex=0.7)
+mtext("PC2", side=2, outer=T, line=1.75, at = 0.25, cex=0.7)
+mtext("PC1", side=1, outer=T, line=1.75, at = 0.75, cex=0.7)
+mtext("PC1", side=1, outer=T, line=1.75, at = 0.25, cex=0.7)
+```
+

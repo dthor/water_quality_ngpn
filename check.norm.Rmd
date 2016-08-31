@@ -1,0 +1,104 @@
+---
+title: "check.norm"
+author: "Darren Thornbrugh"
+date: "August 31, 2016"
+output: html_document
+---
+
+## Article title: A practitioner’s guide for exploring water quality patterns using Principal Components Analysis and Procrustes
+## Journal name: Environmental Monitoring and Assessment
+## Author names: C. J. Sergeant, E. N. Starkey, K. K. Bartz, M. H. Wilson, F. J. Mueter
+## Corresponding author: C. J. Sergeant, National Park Service, christopher_sergeant@nps.gov
+
+```{r}
+
+## Efficiently checking for normality in a range of parameter values using 'check.norm' function
+## Written by Franz Mueter/Chris Sergeant
+## Updated 18 September 2015
+
+###################################
+## Two easy ways to read-in data ##
+###################################
+
+# 1) choose your file from a Windows Explorer dialogue box that pops up after running code
+# Note that 'header=T' assumes you have headers for each data column
+
+wq = read.csv(file.choose(), header=T)
+
+# 2) read-in data that is actively copied in your excel spreadsheet (.xls or .csv files)
+# Copy your data in the spreadsheet, and while the marquee is still moving, run the code below
+# Note that 'header=T' assumes you have headers for each data column
+
+# Here is a good link discussing how to use this approach in more detail:
+# http://www.dummies.com/how-to/content/how-to-use-the-clipboard-to-copy-and-paste-data-in.html
+
+wq = read.table(file = "clipboard", sep = "\t", header=T)
+
+# Quickly review the content and dimensions of imported data
+
+head(wq); dim(wq)
+
+```
+## Setup function
+
+
+```{r, echo=FALSE}
+###########################################################
+## Checking for normality in a range of parameter values ##
+###########################################################
+
+check.norm <- function(x, ...)
+{
+
+# Examine distribution of data and check against normal distribution
+# x    is a vector of data. Additional graphics parameters can be supplied
+#
+# The function creates:
+# (1) a histogram with an empirical density estimate, 
+# (2) a boxplot
+# (3) a normal q-q plot, and 
+# (4) a plot of the empirical cumulative density function 
+#     with the corresponding normal cdf. 
+# In addition, the function returns the results from the 
+# Shapiro-Wilks test of normality (p < 0.05 interpreted as non-normal data)
+#
+# Written by Franz Mueter. Last modified September 6, 2010
+#
+
+  par(mfrow=c(2,2))
+  if(sum(is.na(x)) > 0)
+  warning("NA's were removed before plotting")
+  x <- x[!is.na(x)]
+  hist(x, main = "Histogram and non-\nparametric density estimate", prob = T)
+  iqd <- summary(x)[5] - summary(x)[2]
+  lines(density(x, width = 2 * iqd))
+  boxplot(x, main = "Boxplot", ...)
+  qqnorm(x)
+  qqline(x)
+  plot.ecdf(x, main="Empirical and normal cdf")
+  LIM <- par("usr")
+  y <- seq(LIM[1],LIM[2],length=100)
+  lines(y, pnorm(y, mean(x), sqrt(var(x))))
+  shapiro.test(x)
+}
+```
+
+
+```{r}
+# Check normality of parameter from dataset 'wq'
+# Where 'ENTER PARAMETER HERE' is written below, replace with parameter's column name in your data table (e.g. DO)
+
+##check.norm(wq$ENTER PARAMETER HERE)
+source("CheckNorm.Rmd")
+
+check.norm(wq$SC)
+check.norm(wq$DO)
+check.norm(wq$pH)
+check.norm(wq$Temp)
+
+```
+
+# For users that are familiar with working directories in R, you may want to consider creating a separate .R file
+# composed of only the code for the check.norm function. Then, if that file is in your working directory and named
+# 'CheckNorm.R', it can be called at any time using: source("CheckNorm.R")
+

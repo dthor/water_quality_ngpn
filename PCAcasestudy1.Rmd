@@ -1,0 +1,84 @@
+---
+title: "PCAcasestudy"
+author: "Darren Thornbrugh"
+date: "August 31, 2016"
+output: html_document
+---
+
+```{r}
+## Article title: A practitioner’s guide for exploring water quality patterns using Principal Components Analysis and Procrustes
+## Journal name: Environmental Monitoring and Assessment
+## Author names: C. J. Sergeant, E. N. Starkey, K. K. Bartz, M. H. Wilson, F. J. Mueter
+## Corresponding author: C. J. Sergeant, National Park Service, christopher_sergeant@nps.gov
+
+## Case study A: Seasonal water quality patterns across three sites in a single watershed during one year
+## Code for PCA
+## Written by Chris Sergeant, Updated 15 September 2015
+
+## Clean up workspace. This function removes any data already loaded.
+
+rm(list=ls())
+
+##################
+## Read-in data ##
+##################
+
+# This case study runs a PCA on one data matrix in the .xlsx file '3_CaseStudyA.xlsx'
+# The matrix represents a year of seasonal data from three sites on the Niobrara River: AGFO, NIOB, and MNRR (see article for descriptions)
+# Use the code below to read-in data that is actively copied in your excel spreadsheet (this works for .xls or .csv files)
+# Copy your data in the spreadsheet, and while the marquee is still moving, run the code below
+# Note that 'header=T' allows the function to recognize header names, and 'row.names=1' allows the function
+# to recognize that the first column is the name for each data row
+
+# Select and copy the data matrix (A6:E34) and run this code (press F5 or control-R) while the copy marquee is active:
+
+wq = read.table(file = "clipboard", sep = "\t", header=T, row.names=1)
+
+# Quickly review the content and dimensions of imported data for accuracy
+
+head(wq); dim(wq)
+
+####################################
+## Perform PCAs and graph biplot  ##
+####################################
+
+## PCA based on the CORRELATION matrix, instead of the VARIANCE-COVARIANCE matrix: 'cor=T' 
+## Since the core parameters are measured on different scales, this ensures the data are normalized to 0 mean, 1 SD
+## In the .xlsx file for Case Study A, the site column is labled 'PARKMMM'
+## where PARK = 4-letter site code and MMM = abbreviated month
+## For these datasets, 15-minute continuous measurements were averaged by month.
+
+####################################
+#### Niobrara River monthly PCA  ###
+####################################
+
+pca = princomp(x = wq[,2:5], cor=T)
+
+# Summary information for PCA
+
+summary(pca)                     # How important is each principal component? (the cumulative proportion is most important here)
+print(loadings(pca), cutoff=0)   # Loadings tell you how influential each variable was in forming the ordination spread of points
+print(loadings(pca), cutoff=0.4) # Only show loadings 0.4 or greater
+plot(pca)                        # This is known as a "scree plot"; it is the visual representation of the variance accounted for in each PC 
+
+# Create a table comparing observed eigenvalues to expected eignevalues (same approach as broken stick spreadsheet file, "2_BrokenStick.xlsx")
+
+obs.eig = pca$sdev^2             # Observed eigenvalues
+exp.eig = rev(cumsum(1/(4:1)))   # The expected eignvalues calculated here assume 4 components; 
+                                 # For other applications, replace 4 with appropriate number or use (for example): length(pca.results$sdev)
+cbind(obs.eig,exp.eig)           # Table output     
+
+# Create biplot
+             
+biplot(pca)                      # This is the default ordination of PCA scores 
+
+# Slightly cleaned up version of default biplot (informative axis labels, and smaller font for each point)
+# To add a title, insert text between "" after 'main='
+
+biplot(pca, main="", xlab="PC1 (SC-pH-DO gradient)", ylab="PC2 (Temp gradient)", cex=0.7)
+
+
+
+
+```
+

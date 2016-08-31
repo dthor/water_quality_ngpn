@@ -1,0 +1,240 @@
+---
+title: "PCAcasestudy2"
+author: "Darren Thornbrugh"
+date: "August 31, 2016"
+output: html_document
+---
+
+```{r}
+## Article title: A practitioner’s guide for exploring water quality patterns using Principal Components Analysis and Procrustes
+## Journal name: Environmental Monitoring and Assessment
+## Author names: C. J. Sergeant, E. N. Starkey, K. K. Bartz, M. H. Wilson, F. J. Mueter
+## Corresponding author: C. J. Sergeant, National Park Service, christopher_sergeant@nps.gov
+
+## Case study B: seasonal water quality patterns at a single site across three years
+## Code for PCA and Procrustes analysis
+## Written by Chris Sergeant/Eric Starkey, Updated 15 September 2015
+
+## Clean up workspace. This function removes any data already loaded.
+
+rm(list=ls())
+
+## reset plot parm
+dev.off()
+
+##################
+## Read-in data ##
+##################
+
+# This case study runs a PCA on three separate data matrices that are included in the same .xlsx file (5_CaseStudyB.xlsx)
+# Each matrix represents a year of seasonal data from Lapwai Creek (2008, 2011, and 2014)
+# Use the code below to read-in data that is actively copied in your excel spreadsheet (.xls or .csv files)
+# Copy your data in the spreadsheet, and while the marquee is still moving, run the code below
+# Note that 'header=T' allows the function to recognize header names, and 'row.names=1' allows the function
+# to recognize that the first column is the name for each data row
+
+# Select and copy the 2008 data matrix (A6:E23) and run this code while the copy marquee is active:
+
+wq08 = read.table(file = "clipboard", sep = "\t", header=T, row.names=1)
+
+# Do the same for 2011 and 2014
+
+wq11 = read.table(file = "clipboard", sep = "\t", header=T, row.names=1)
+wq14 = read.table(file = "clipboard", sep = "\t", header=T, row.names=1)
+
+# Quickly review the content and dimensions of imported data for accuracy
+
+head(wq08); dim(wq08)
+head(wq11); dim(wq11)
+head(wq14); dim(wq14)
+
+####################################
+## Perform PCAs and graph biplots ##
+####################################
+
+## PCA based on the CORRELATION matrix, instead of the VARIANCE-COVARIANCE matrix: 'cor=T' 
+## Since the core parameters are measured on different scales, this ensures the data are normalized to 0 mean, 1 SD
+## In the .xlsx file for Case Study B, the site column is labeled 'MMMWYY'
+## where MMM = abreviated month, W = letters a-e to indicate the week of the month, YY = year.
+## For these datasets, hourly measurements were aggregated into weekly averages.
+
+####################################
+####NEPE-Lapwai Creek Weekly 2008###
+####################################
+
+pca08 = princomp(x = wq08, cor=T)
+
+# Summary information for PCA
+
+summary(pca08)                     # How important is each principal component? (the cumulative proportion is most important here)
+print(loadings(pca08), cutoff=0)   # Loadings tell you how influential each variable was in forming the ordination spread of points
+print(loadings(pca08), cutoff=0.4) # Only show loadings 0.4 or greater
+plot(pca08)                        # This is known as a "scree plot"; it is the visual representation of the variance accounted for in each PC 
+
+# Create a table comparing observed eigenvalues to expected eignevalues (same approach as broken stick spreadsheet file, "2_BrokenStick.xlsx")
+
+obs.eig.08 = pca08$sdev^2          # Observed eigenvalues
+exp.eig.08 = rev(cumsum(1/(4:1)))  # The expected eignvalues calculated here assume 4 components; 
+                                   # For other applications, replace 4 with appropriate number or use (for example): length(pca.results$sdev)
+cbind(obs.eig.08,exp.eig.08)       # Table output     
+
+# Create biplot
+
+biplot(pca08)                      # This is the default ordination of PCA scores 
+
+# Slightly cleaned up version of default biplot (informative axis labels, and smaller font for each point)
+
+biplot(pca08, main="Lapwai Creek 2008", xlab="PC1 (Temp-DO gradient)", ylab="PC2 (pH-SC gradient)", cex=0.7)
+
+#####################################
+#### NEPE-Lapwai Creek weekly 2011###
+#####################################
+
+pca11 = princomp(x = wq11, cor=T)
+
+summary(pca11)                     
+print(loadings(pca11), cutoff=0)   
+print(loadings(pca11), cutoff=0.4) 
+plot(pca11) 
+
+obs.eig.11 = pca11$sdev^2 
+exp.eig.11 = rev(cumsum(1/(4:1)))
+cbind(obs.eig.11,exp.eig.11)
+               
+biplot(pca11)                      
+biplot(pca11, main="Lapwai Creek 2011", xlab="PC1 (Temp/pH-DO gradient)", ylab="PC2 (SC gradient)", cex=0.7)
+
+#####################################
+#### NEPE-Lapwai Creek weekly 2014###
+#####################################
+
+pca14 = princomp(x = wq14, cor=T)
+
+summary(pca14)                     
+print(loadings(pca14), cutoff=0)   
+print(loadings(pca14), cutoff=0.4) 
+plot(pca14)
+
+obs.eig.14 = pca14$sdev^2 
+exp.eig.14 = rev(cumsum(1/(4:1)))
+cbind(obs.eig.14,exp.eig.14)
+                        
+biplot(pca14)                      
+biplot(pca14, main="Lapwai Creek 2014", xlab="PC1 (Temp/pH-DO gradient)", ylab="PC2 (SC gradient)", cex=0.7)
+
+##########################################################################################
+## Perform Procrustes analysis to compare two PCAs with the same data matrix structure  ##
+########################################################################################## 
+
+## The code below only uses the PC1 and PC2 scores from each PCA to run the 'protest' function;
+## depending on your results, you may want to use more PCs
+
+## This analysis requires the 'vegan' library:
+
+install.packages("vegan")   # only run this line if you don't have 'vegan' installed
+library(vegan)              # allow 'vegan' to be used for the following analyses
+
+######################################
+### NEPE-Lapwai Creek 2008 vs. 2011###
+######################################
+
+pca08.scores = pca08$scores[,1:2]                   # create a data frame of scores from 2008 PC1 and PC2
+pca11.scores = pca11$scores[,1:2]                   # create a data frame of scores from 2011 PC1 and PC2
+scores.pro = protest(pca08.scores, pca11.scores)    # assess the degree of similarity between the 2008 and 2011 data matrices
+
+## This output will give you the correlation between the two PCAs
+
+scores.pro
+
+## Two different ways to display the residuals between individual PCA scores from 2008 and 2011
+
+plot(scores.pro,kind=1, ylim=c(-0.3,0.3), xlim=c(-0.3,0.3))
+plot(scores.pro,kind=2)
+
+## Graph of ranked procrustes residuals (as in Sergeant and Nagorski 2014, Figure 3)
+resid0811 = as.matrix(sort(residuals(scores.pro)))
+par(mar=c(3,3,2,2), las=1)
+plot(resid0811, pch=1, ylim=c(0,0.5), ylab="",xaxt="n",bty="l")
+grid(NA,NULL,col="grey85", lty=3)
+mtext("Ranked observations (n = 17)",1, line=0.5)
+mtext("Procrustes residuals", side = 3, cex=0.8, font=2, adj=0.015, line=-0.5)
+
+######################################
+### NEPE-Lapwai Creek 2008 vs. 2014###
+######################################
+
+pca08.scores = pca08$scores[,1:2]
+pca14.scores = pca14$scores[,1:2]
+scores.pro2 = protest(pca08.scores, pca14.scores)
+
+scores.pro2
+
+plot(scores.pro2,kind=1, ylim=c(-0.3,0.3), xlim=c(-0.3,0.3))
+plot(scores.pro2,kind=2)
+
+resid0814 = as.matrix(sort(residuals(scores.pro2)))
+par(mar=c(3,3,2,2), las=1)
+plot(resid0814, pch=19, ylim=c(0,0.5), ylab="",xaxt="n",bty="l")
+grid(NA,NULL,col="grey85", lty=3)
+mtext("Ranked observations (n = 17)",1, line=0.5)
+mtext("Procrustes residuals", side = 3, cex=0.8, font=2, adj=0.015, line=-0.5)
+
+######################################
+### NEPE-Lapwai Creek 2011 vs. 2014###
+######################################
+
+pca11.scores = pca11$scores[,1:2]
+pca14.scores = pca14$scores[,1:2]
+scores.pro3 = protest(pca11.scores, pca14.scores)
+
+scores.pro3
+
+plot(scores.pro3,kind=1, ylim=c(-0.3,0.3), xlim=c(-0.3,0.3))
+plot(scores.pro3,kind=2)
+
+resid1114 = as.matrix(sort(residuals(scores.pro3)))
+par(mar=c(3,3,2,2), las=1)
+plot(resid1114, pch=2, ylim=c(0,0.5), ylab="",xaxt="n",bty="l")
+grid(NA,NULL,col="grey85", lty=3)
+mtext("Ranked observations (n = 17)",1, line=0.5)
+mtext("Procrustes residuals", side = 3, cex=0.8, font=2, adj=0.015, line=-0.5)
+
+################################################################
+### Graph of ranked procrustes residuals from multiple tests ###
+################################################################
+
+# Note that you must first run the code above to have the residuals from all 3 analysis
+
+resid0811 = as.matrix(sort(residuals(scores.pro)))
+
+par(mar=c(3,3,2,2), las=1)
+plot(resid0811, ylim=c(0,0.5), ylab="",xaxt="n",bty="l")
+grid(NA,NULL,col="grey85", lty=3)
+mtext("Ranked observations (n = 17)",1, line=0.5)
+mtext("Procrustes residuals", side = 3, cex=0.8, font=2, adj=0.015, line=-0.5)
+
+# Add points to graph from other tests:
+points(resid0814, pch=19) # 2008 vs 2014
+points(resid1114, pch=2) # 2011 vs 2014
+
+# Add a legend:
+legend(12, 0.14, c("2011 vs. 2014","2008 vs. 2014","2008 vs. 2011"), pch=c(2,19,1),bty="n", y.intersp=1.5) 
+
+########################################################
+### View raw tables of residuals for each comparison ###
+########################################################
+
+# Ranked
+
+resid0811 
+resid0814
+resid1114
+
+# Un-ranked
+
+residuals(scores.pro)
+residuals(scores.pro2)
+residuals(scores.pro3)
+
+```
+
