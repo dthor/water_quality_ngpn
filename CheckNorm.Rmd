@@ -1,0 +1,55 @@
+---
+title: "CheckNorm"
+author: "Darren Thornbrugh"
+date: "August 31, 2016"
+output: html_document
+---
+### Setup CheckNorm function
+```{r, echo=FALSE}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Efficiently checking for normality in a range of parameter values using 'check.norm' function
+## Written by Franz Mueter/Chris Sergeant
+## Updated 31 August 2016 - by Darren Thornbrugh
+
+###########################################################
+## Checking for normality in a range of parameter values ##
+###########################################################
+
+check.norm <- function(x, ...)
+{
+
+# Examine distribution of data and check against normal distribution
+# x    is a vector of data. Additional graphics parameters can be supplied
+#
+# The function creates:
+# (1) a histogram with an empirical density estimate, 
+# (2) a boxplot
+# (3) a normal q-q plot, and 
+# (4) a plot of the empirical cumulative density function 
+#     with the corresponding normal cdf. 
+# In addition, the function returns the results from the 
+# Shapiro-Wilks test of normality (p < 0.05 interpreted as non-normal data)
+#
+# Written by Franz Mueter. Last modified September 6, 2010
+#
+
+  par(mfrow=c(2,2))
+  if(sum(is.na(x)) > 0)
+  warning("NA's were removed before plotting")
+  x <- x[!is.na(x)]
+  hist(x, main = "Histogram and non-\nparametric density estimate", prob = T)
+  iqd <- summary(x)[5] - summary(x)[2]
+  lines(density(x, width = 2 * iqd))
+  boxplot(x, main = "Boxplot", ...)
+  qqnorm(x)
+  qqline(x)
+  plot.ecdf(x, main="Empirical and normal cdf")
+  LIM <- par("usr")
+  y <- seq(LIM[1],LIM[2],length=100)
+  lines(y, pnorm(y, mean(x), sqrt(var(x))))
+  shapiro.test(x)
+}
+```
+
+# 'CheckNorm.Rmd', it can be called at any time using: source("CheckNorm.Rmd")
+# function name: check.norm
